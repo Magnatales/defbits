@@ -1,0 +1,156 @@
+local defbits = require("defbits.defbits")
+local emitter = require("defbits.emitter")
+local debug = require("main.debug")
+local utils = require("defbits.utils")
+
+---@class Array<T> { [interger]: T }
+
+---@type Array<Defbits>
+local particle_systems = {}
+
+---@type ParticleData
+local fire = {
+	factory_data = { url = "factory#particles", sprite_id = "sprite", collision_id = "collision" },
+	max_particles = 100,
+	color_data = {
+		start = vmath.vector4(1, 0.5, 0, 0.7), -- Bright orange
+		final = vmath.vector4(1, 0.5, 0, 0) -- Fade out to transparent
+	},
+	size_data = {
+		size_start_min = 2, size_start_max = 4, size_end = 0.5
+	},
+	life_data = {
+		lifespan_min = 2, lifespan_max = 4
+	},
+	angle_data = {
+		angle = 180, angle_variance = 30 -- Spread particles in all directions
+	},
+	emit_data = {
+		interval = 0.2, emit_count = 3 -- Emit multiple particles quickly
+	},
+	speed_data = {
+		speed_min = 10, speed_max = 30 -- Varying speeds for explosion effect
+	}
+}
+
+---@class ParticleData
+local smoke = {
+	factory_data = { url = "factory#particles", sprite_id = "sprite", collision_id = "collision" },
+	max_particles = 100,                           -- More particles for a dense smoke effect
+	colors_data = {
+		start = vmath.vector4(0.5, 0.5, 0.5, 0.5), -- Light gray for smoke
+		final = vmath.vector4(0.2, 0.2, 0.2, 0)    -- Fade out to transparent
+	},
+	size_data = {
+		size_start_min = 2, size_start_max = 4, size_end = 5 -- Larger size and minimal shrinking
+	},
+	life_data = {
+		lifespan_min = 3, lifespan_max = 5 -- Longer lifespan to simulate slow-moving smoke
+	},
+	angle_data = {
+		angle = 180, angle_variance = 30 -- Spread particles in all directions
+	},
+	emit_data = {
+		interval = 0.2, emit_count = 3 -- Emit particles frequently and in higher quantity for a continuous effect
+	},
+	speed_data = {
+		speed_min = 3, speed_max = 15 -- Slower speeds for a more gradual rise
+	},
+	noise_data = {
+		noise_min = 1, noise_max = 3 -- Add some noise to make the smoke movement less uniform
+	},
+	rotation_data = {
+		rotation_speed_min = 0, rotation_speed_max = 10 -- Slow rotation for a gentle swirling effect
+	}
+}
+
+local colors = {utils.hex_to_vec4("#14976b", 1), utils.hex_to_vec4("#2b67af", 1), utils.hex_to_vec4("#62b6de", 1), utils.hex_to_vec4("#f589a3", 1), utils.hex_to_vec4("#fc8405", 1) }
+---@type ParticleData
+
+local function get_random_color()
+	return colors[math.random(#colors)]
+end
+
+local colorful_data = {
+	factory_data = { url = "/factory#particles", sprite_id = "sprite", collision_id = "collision" },
+	max_particles = 4000,
+	color_data = {
+		start = colors,
+		final = colors
+	},
+	size_data = {size_start_min = 2, size_start_max = 3, size_end = 0.75},
+	life_data = { lifespan_min = 5, lifespan_max = 6 },
+	speed_data = { speed_min = 30, speed_max = 30 },
+	angle_data = {
+		angle = 90,
+		angle_variance = 180
+	},
+	emit_data = { interval = 0.03, emit_count = 1 }
+}
+
+local colorful_data_2 = {
+	factory_data = { url = "/factory#particles", sprite_id = "sprite", collision_id = "collision" },
+	max_particles = 4000,
+	color_data = {
+		start = colors,
+		final = colors
+	},
+	size_data = {size_start_min = 2, size_start_max = 3, size_end = 0.75},
+	life_data = { lifespan_min = 1.5, lifespan_max = 2 },
+	speed_data = { speed_min = 60, speed_max = 60 },
+	angle_data = {
+		angle = 90,
+		angle_variance = 180
+	},
+	emit_data = { interval = 0.03, emit_count = 1 }
+}
+
+function init(_)
+	msg.post(".", "acquire_input_focus")
+	msg.post("@render:", "use_fixed_fit_projection", { near = -10, far = 10 })
+
+	-- timer.delay(3, false, function()
+	-- 	local spiral_emitter = emitter.new_spiral_emitter(vmath.vector3(200, 720/2, 0), 2)
+	-- 	local defbits_instance = defbits.new(spiral_emitter, colorful_data)
+	-- 	defbits_instance.emit()
+
+	-- 	timer.delay(2, false, function() 
+	-- 		local heart_emitter = emitter.new_heart_emitter(vmath.vector3(625, 400, 0), 50, 50)
+	-- 		local defbits_instance_1 = defbits.new(heart_emitter, colorful_data_2)
+	-- 		timer.delay(0.5, true, function()
+	-- 			defbits_instance_1.emit_once(50)
+	-- 		end)
+	-- 	end)
+
+	-- 	timer.delay(6, false, function() 
+	-- 		local new_lissajous_emitter = emitter.new_lissajous_emitter(vmath.vector3(1280 - 200, 400, 0), 100, 50, 50, 3, 2, math.pi / 2)
+	-- 		local defbits_instance_2 = defbits.new(new_lissajous_emitter, colorful_data)
+	-- 		defbits_instance_2.emit()
+	-- 	end)
+	-- end)
+
+	local bg_color = utils.hex_to_vec4("#fffbe6", 1)
+	msg.post("@render:", "clear_color", { color = bg_color })
+	profiler.enable_ui(true)
+	profiler.set_ui_view_mode(profiler.VIEW_MODE_MINIMIZED)
+
+	
+end
+
+function update(_, dt)
+	defbits.DT = dt
+	debug.update(dt)
+end
+
+function on_input(_, action_id, action)
+	if action_id == hash("touch") and action.pressed then
+		local spiral_emitter = emitter.new_spiral_emitter(vmath.vector3(action.x, action.y, 0), 2)
+		local defbits_instance = defbits.new(spiral_emitter, colorful_data)
+		defbits_instance.emit()
+		table.insert(particle_systems, defbits_instance)
+	elseif action_id == hash("touch_right") and action.pressed then
+		for _, defbits_instance in ipairs(particle_systems) do
+			defbits_instance.cancel()
+		end
+	end
+end

@@ -1,0 +1,4 @@
+images {
+  image: "/main/particle/particle.png"
+}
+extrude_borders: 2

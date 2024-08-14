@@ -1,0 +1,26 @@
+name: "sprite"
+tags: "particle"
+vertex_program: "/defbits/shader/sprite_vertex.vp"
+fragment_program: "/defbits/shader/sprite_vertex.fp"
+vertex_constants {
+  name: "view_proj"
+  type: CONSTANT_TYPE_VIEWPROJ
+}
+samplers {
+  name: "texture_sampler"
+  wrap_u: WRAP_MODE_CLAMP_TO_EDGE
+  wrap_v: WRAP_MODE_CLAMP_TO_EDGE
+  filter_min: FILTER_MODE_MIN_DEFAULT
+  filter_mag: FILTER_MODE_MAG_DEFAULT
+}
+attributes {
+  name: "tint"
+  semantic_type: SEMANTIC_TYPE_COLOR
+  element_count: 4
+  double_values {
+    v: 1.0
+    v: 0.0
+    v: 0.0
+    v: 1.0
+  }
+}
