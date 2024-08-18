@@ -1,3 +1,3 @@
 local function foo()
-    print("foo")
+    print("foo modified")
 end
